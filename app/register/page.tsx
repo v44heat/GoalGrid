@@ -1,18 +1,21 @@
-import { Construction } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { redirect } from "next/navigation";
+import { Card } from "@/components/ui/Card";
+import { RegisterForm } from "@/components/auth/RegisterForm";
+import { getCurrentProfile } from "@/lib/auth/session";
 
-export const metadata = { title: "Register" };
+export const metadata = { title: "Create account" };
+export const dynamic = "force-dynamic";
 
-export default function Page() {
+export default async function RegisterPage() {
+  const profile = await getCurrentProfile();
+  if (profile?.status === "APPROVED") redirect("/");
+
   return (
-    <>
-      <PageHeader title="Register" />
-      <EmptyState
-        icon={Construction}
-        title="Not built yet"
-        description="This page arrives in a later phase."
-      />
-    </>
+    <div className="mx-auto max-w-sm">
+      <h1 className="mb-6 font-display text-4xl font-bold tracking-tight">Create account</h1>
+      <Card>
+        <RegisterForm />
+      </Card>
+    </div>
   );
 }
