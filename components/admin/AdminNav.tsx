@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/admin/players", label: "Players" },
   { href: "/admin/seasons", label: "Seasons" },
   { href: "/admin/fixtures", label: "Fixtures" },
+  { href: "/admin/results", label: "Results" },
   { href: "/admin/teams", label: "Teams" },
 ];
 

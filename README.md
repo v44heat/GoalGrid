@@ -22,6 +22,19 @@ In Supabase > SQL Editor run, in order:
 3. `supabase/migrations/0002_auth_support.sql`
 4. `supabase/migrations/0003_seasons_teams.sql` (creates the `team-logos` storage bucket and the season-creation function)
 5. `supabase/migrations/0004_fixtures.sql` (fixture generation function and participant lock)
+6. `supabase/migrations/0005_results.sql` (record and delete result functions)
+
+## Results and standings (Phase 5)
+
+- `/admin/results` records, corrects and deletes results. It works only while the season is active.
+  A fixture can have at most one result (database `UNIQUE`), and recording one marks the fixture played.
+  Deleting a result puts the fixture back to upcoming.
+- Standings are never stored or edited. `/standings` recalculates from the results on every request, so a
+  corrected or deleted result is reflected immediately. Win 3, draw 1, loss 0. Ranked by points, goal
+  difference, then goals scored. Players level on all three share a position, shown with `=`.
+- `/results` lists played matches, `/players` shows each player's stats and form, `/players/<id>` shows a
+  profile with match history.
+- `npm run verify:standings` checks the calculation against the spec examples and 200 random seasons (Node 22.6+).
 
 ## Fixtures (Phase 4)
 

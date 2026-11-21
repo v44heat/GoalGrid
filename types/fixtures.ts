@@ -6,6 +6,12 @@ export interface FixturePlayer {
   team: Team | null;
 }
 
+export interface FixtureResult {
+  homeScore: number;
+  awayScore: number;
+  recordedAt: string;
+}
+
 export interface FixtureRow {
   id: string;
   matchday: number;
@@ -13,6 +19,8 @@ export interface FixtureRow {
   status: FixtureStatus;
   home: FixturePlayer;
   away: FixturePlayer;
+  /** null until a result is recorded */
+  result: FixtureResult | null;
 }
 
 /** Editable statuses. PLAYED is set only by recording a result (Phase 5). */

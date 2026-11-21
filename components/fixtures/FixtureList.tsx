@@ -5,7 +5,7 @@ import { formatDate } from "@/utils/dates";
 import { cn } from "@/utils/cn";
 import type { FixturePlayer, FixtureRow } from "@/types/fixtures";
 
-function Side({ player, align }: { player: FixturePlayer; align: "left" | "right" }) {
+export function Side({ player, align }: { player: FixturePlayer; align: "left" | "right" }) {
   const logo = player.team ? (
     <TeamLogo
       name={player.team.name}
@@ -77,9 +77,15 @@ export function FixtureList({
                 <li key={f.id} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3">
                   <Side player={f.home} align="right" />
                   <div className="flex w-16 flex-col items-center text-center">
-                    <span className="font-display text-lg text-chalk-faint">vs</span>
-                    {f.status !== "UPCOMING" && (
-                      <Badge tone={f.status === "PLAYED" ? "success" : "warning"} className="mt-0.5">
+                    {f.result ? (
+                      <span className="tabular font-display text-2xl font-bold">
+                        {f.result.homeScore} - {f.result.awayScore}
+                      </span>
+                    ) : (
+                      <span className="font-display text-lg text-chalk-faint">vs</span>
+                    )}
+                    {f.status !== "UPCOMING" && f.status !== "PLAYED" && (
+                      <Badge tone="warning" className="mt-0.5">
                         {f.status.toLowerCase()}
                       </Badge>
                     )}
