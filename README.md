@@ -20,6 +20,14 @@ In Supabase > SQL Editor run, in order:
 1. `supabase/migrations/0001_initial_schema.sql`
 2. `supabase/seed.sql`
 3. `supabase/migrations/0002_auth_support.sql`
+4. `supabase/migrations/0003_seasons_teams.sql` (creates the `team-logos` storage bucket and the season-creation function)
+
+## Seasons and teams (Phase 3)
+
+- Admin: `/admin/teams` manages clubs and logos; `/admin/seasons` creates seasons and manages participants.
+- A season always lasts 30 days: the end date is the start date + 29 days and is calculated on the server.
+- Players pick a team on `/seasons/<id>` while the season is a draft. Each team can be used by one player per season.
+- After that, only an admin can change a team (Participants list on the season's admin page).
 
 ## Authentication setup (Phase 2)
 
