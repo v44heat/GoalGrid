@@ -3,6 +3,8 @@ import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ToastProvider } from "@/components/ui/Toast";
+import { getCurrentProfile } from "@/lib/auth/session";
 import { APP_NAME } from "@/lib/constants";
 
 const display = Barlow_Condensed({
@@ -29,13 +31,22 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const profile = await getCurrentProfile();
+  // Suspended or pending accounts are treated as signed out in the UI.
+  const user =
+    profile && profile.status === "APPROVED"
+      ? { username: profile.username, role: profile.role }
+      : null;
+
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
-        <Navbar />
-        <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
-        <Footer />
+        <ToastProvider>
+          <Navbar user={user} />
+          <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
+          <Footer />
+        </ToastProvider>
       </body>
     </html>
   );
