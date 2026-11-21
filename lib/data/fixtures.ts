@@ -2,7 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getParticipants } from "@/lib/data/seasons";
 import type { FixtureStatus } from "@/types/database";
-import type { FixturePlayer, FixtureRow } from "@/types/fixtures";
+import type { FixturePlayer, FixtureResult, FixtureRow } from "@/types/fixtures";
 
 type Client = ReturnType<typeof createClient>;
 
@@ -18,7 +18,9 @@ export async function getFixtureRows(supabase: Client, seasonId: string): Promis
   const [{ data }, participants] = await Promise.all([
     supabase
       .from("fixtures")
-      .select("id, matchday, home_player_id, away_player_id, scheduled_date, status")
+      .select(
+        "id, matchday, home_player_id, away_player_id, scheduled_date, status, match_results(home_score, away_score, recorded_at)"
+      )
       .eq("season_id", seasonId)
       .order("matchday", { ascending: true })
       .order("scheduled_date", { ascending: true }),
@@ -37,15 +39,25 @@ export async function getFixtureRows(supabase: Client, seasonId: string): Promis
     away_player_id: string;
     scheduled_date: string;
     status: FixtureStatus;
+    match_results: RawResult | RawResult[] | null;
+  };
+  type RawResult = { home_score: number; away_score: number; recorded_at: string };
+
+  // fixture_id is UNIQUE on match_results, so PostgREST may return the result as an object or
+  // as a one-item array depending on version. Accept both.
+  const resultOf = (raw: Raw["match_results"]): FixtureResult | null => {
+    const r = Array.isArray(raw) ? raw[0] : raw;
+    return r ? { homeScore: r.home_score, awayScore: r.away_score, recordedAt: r.recorded_at } : null;
   };
 
-  return ((data ?? []) as Raw[]).map((f) => ({
+  return ((data ?? []) as unknown as Raw[]).map((f) => ({
     id: f.id,
     matchday: f.matchday,
     scheduledDate: f.scheduled_date,
     status: f.status,
     home: players.get(f.home_player_id) ?? unknown(f.home_player_id),
     away: players.get(f.away_player_id) ?? unknown(f.away_player_id),
+    result: resultOf(f.match_results),
   }));
 }
 
