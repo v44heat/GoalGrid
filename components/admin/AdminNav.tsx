@@ -8,6 +8,8 @@ import { cn } from "@/utils/cn";
 const ITEMS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/players", label: "Players" },
+  { href: "/admin/seasons", label: "Seasons" },
+  { href: "/admin/teams", label: "Teams" },
 ];
 
 export function AdminNav() {
