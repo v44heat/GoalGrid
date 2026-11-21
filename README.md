@@ -21,6 +21,17 @@ In Supabase > SQL Editor run, in order:
 2. `supabase/seed.sql`
 3. `supabase/migrations/0002_auth_support.sql`
 4. `supabase/migrations/0003_seasons_teams.sql` (creates the `team-logos` storage bucket and the season-creation function)
+5. `supabase/migrations/0004_fixtures.sql` (fixture generation function and participant lock)
+
+## Fixtures (Phase 4)
+
+- On a draft season's admin page you get a preview of the generated fixtures. Nothing is saved until you click "Confirm and generate fixtures".
+- Format: double round-robin (circle method). Every pairing is played twice with home and away reversed. With 2 to 14 players. For 6 players that is 30 matches over 10 matchdays, 3 per matchday.
+- Dates: matchdays are spread from day 1 to day 28 (6 players: days 1, 4, 7 ... 28). Days 29 and 30 are a buffer for postponed games.
+- Once fixtures exist the player list is locked (enforced by a database trigger). "Discard fixtures" unlocks it again while the season is a draft.
+- "Start season" needs fixtures and a team for every player, and only one season can be active at a time.
+- `/admin/fixtures` reschedules fixtures and changes their status (upcoming, postponed, cancelled). `/fixtures` is the public view.
+- `npm run verify:fixtures` checks the generator for 2 to 14 players (Node 22.6+).
 
 ## Seasons and teams (Phase 3)
 

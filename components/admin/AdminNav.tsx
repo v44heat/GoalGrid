@@ -9,6 +9,7 @@ const ITEMS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/players", label: "Players" },
   { href: "/admin/seasons", label: "Seasons" },
+  { href: "/admin/fixtures", label: "Fixtures" },
   { href: "/admin/teams", label: "Teams" },
 ];
 
