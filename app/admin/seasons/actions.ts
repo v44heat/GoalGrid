@@ -86,6 +86,9 @@ export async function addParticipantAction(
     .insert({ season_id: seasonId, user_id: userId });
   if (error) {
     if (error.code === "23505") return { ok: false, error: "That player is already in this season." };
+    if (error.message.includes("FIXTURES_EXIST")) {
+      return { ok: false, error: "Fixtures exist. Discard them before changing the players." };
+    }
     console.error("addParticipant failed:", error.message);
     return { ok: false, error: "Couldn't add the player. Try again." };
   }
@@ -115,6 +118,9 @@ export async function removeParticipantAction(
     .eq("season_id", seasonId)
     .eq("user_id", userId);
   if (error) {
+    if (error.message.includes("FIXTURES_EXIST")) {
+      return { ok: false, error: "Fixtures exist. Discard them before changing the players." };
+    }
     console.error("removeParticipant failed:", error.message);
     return { ok: false, error: "Couldn't remove the player. Try again." };
   }
