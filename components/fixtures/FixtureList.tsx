@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/Badge";
 import { TeamLogo } from "@/components/teams/TeamLogo";
+import { FixturesImageButton } from "@/components/graphics/ImageButtons";
 import { groupByMatchday } from "@/lib/data/fixtures";
+import { fixturesImageData } from "@/lib/data/graphics";
 import { formatDate } from "@/utils/dates";
 import { cn } from "@/utils/cn";
 import type { FixturePlayer, FixtureRow } from "@/types/fixtures";
@@ -41,10 +43,12 @@ export function FixtureList({
   rows,
   today,
   nextMatchday,
+  seasonName,
 }: {
   rows: FixtureRow[];
   today: string;
   nextMatchday: number | null;
+  seasonName: string;
 }) {
   const groups = groupByMatchday(rows);
 
@@ -70,6 +74,7 @@ export function FixtureList({
                 {isNext && <Badge tone="success">Next up</Badge>}
                 {headerDate === today && <Badge tone="warning">Today</Badge>}
                 {formatDate(headerDate)}
+                <FixturesImageButton data={fixturesImageData(seasonName, matchday, fixtures)} iconOnly />
               </div>
             </header>
             <ul className="divide-y divide-turf-700">

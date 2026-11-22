@@ -9,7 +9,9 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "verify:fixtures": "node --experimental-strip-types --no-warnings scripts/verify-fixtures.mjs",
-    "verify:standings": "node --experimental-strip-types --no-warnings scripts/verify-standings.mjs"
+    "verify:standings": "node --experimental-strip-types --no-warnings scripts/verify-standings.mjs",
+    "verify:statistics": "node --experimental-strip-types --no-warnings scripts/verify-statistics.mjs",
+    "verify": "npm run verify:fixtures && npm run verify:standings && npm run verify:statistics"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

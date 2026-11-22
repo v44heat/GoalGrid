@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { SeasonSwitcher } from "@/components/seasons/SeasonSwitcher";
 import { TeamLogo } from "@/components/teams/TeamLogo";
 import { FormChips } from "@/components/standings/FormChips";
@@ -32,7 +33,15 @@ export default async function PlayersPage({ searchParams }: { searchParams: { se
 
   return (
     <>
-      <PageHeader title="Players" description={season.name} />
+      <PageHeader
+        title="Players"
+        description={season.name}
+        actions={
+          <Link href="/head-to-head">
+            <Button variant="secondary">Head-to-head</Button>
+          </Link>
+        }
+      />
       <SeasonSwitcher seasons={seasons} currentId={season.id} basePath="/players" />
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((r) => (

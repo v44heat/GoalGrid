@@ -70,7 +70,7 @@ export default async function AdminResultsPage({ searchParams }: { searchParams:
             </h2>
             <ul className="divide-y divide-turf-700">
               {fixtures.map((f) => (
-                <ResultAdminRow key={f.id} fixture={f} editable={editable} />
+                <ResultAdminRow key={f.id} fixture={f} editable={editable} seasonName={season.name} />
               ))}
             </ul>
           </section>

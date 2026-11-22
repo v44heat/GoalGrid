@@ -141,7 +141,10 @@ export default async function PlayerProfilePage({
         </>
       )}
 
-      <p className="mt-8">
+      <p className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
+        <Link href={`/head-to-head?a=${me.playerId}`} className="text-grass underline-offset-2 hover:underline">
+          Compare with another player
+        </Link>
         <Link href={`/standings?season=${season.id}`} className="text-grass underline-offset-2 hover:underline">
           Back to standings
         </Link>

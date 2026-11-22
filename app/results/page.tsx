@@ -35,7 +35,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: { se
       {played.length === 0 ? (
         <EmptyState icon={Flag} title="No results yet" description="Scores show up here as soon as the admin records them." />
       ) : (
-        <ResultsList rows={played} />
+        <ResultsList rows={played} seasonName={season.name} />
       )}
     </>
   );

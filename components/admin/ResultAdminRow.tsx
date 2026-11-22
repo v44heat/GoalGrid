@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
+import { MatchCardButton } from "@/components/graphics/ImageButtons";
+import { matchCardData } from "@/lib/data/graphics";
 import { deleteResultAction, saveResultAction } from "@/app/admin/results/actions";
 import type { FixtureRow } from "@/types/fixtures";
 
@@ -12,7 +14,15 @@ const scoreInput =
   "tabular h-10 w-14 rounded-lg border border-turf-600 bg-turf-900 text-center text-lg font-semibold " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-grass disabled:opacity-60";
 
-export function ResultAdminRow({ fixture, editable }: { fixture: FixtureRow; editable: boolean }) {
+export function ResultAdminRow({
+  fixture,
+  editable,
+  seasonName,
+}: {
+  fixture: FixtureRow;
+  editable: boolean;
+  seasonName: string;
+}) {
   const toast = useToast();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -112,6 +122,9 @@ export function ResultAdminRow({ fixture, editable }: { fixture: FixtureRow; edi
               <Button size="sm" variant="ghost" disabled={!editable || pending} onClick={() => setConfirming(true)}>
                 Delete
               </Button>
+            )}
+            {saved && matchCardData(seasonName, fixture) && (
+              <MatchCardButton data={matchCardData(seasonName, fixture)!} iconOnly />
             )}
           </>
         )}
