@@ -36,6 +36,19 @@ In Supabase > SQL Editor run, in order:
   profile with match history.
 - `npm run verify:standings` checks the calculation against the spec examples and 200 random seasons (Node 22.6+).
 
+## Statistics and shareable graphics (Phase 6)
+
+- `/statistics` shows season totals and records (leader, top scorer, wins/draws/losses, goal difference, best
+  defence, streaks, highest scoring match). Ties are listed, never hidden. All values are calculated from results.
+- `/head-to-head` is an all-time record between two players across every season, with previous meetings.
+- Images are drawn in the browser on a canvas, so they cost nothing to host and need no extra service:
+  match card (on `/results` and in `/admin/results`), league table (`/standings`), fixture graphic for a matchday
+  (`/fixtures`) and a season summary card (on a completed season's page). On phones a Share button sends the
+  image straight to WhatsApp.
+- The season summary appears once a season's status is COMPLETED. Phase 7 adds the Complete button. To try it
+  sooner: `update seasons set status = 'COMPLETED' where name = 'Your season';` (set it back to ACTIVE afterwards).
+- `npm run verify` runs the fixture, standings and statistics checks together.
+
 ## Fixtures (Phase 4)
 
 - On a draft season's admin page you get a preview of the generated fixtures. Nothing is saved until you click "Confirm and generate fixtures".

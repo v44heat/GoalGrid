@@ -4,6 +4,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SeasonStatusBadge } from "@/components/seasons/SeasonStatusBadge";
 import { SeasonSwitcher } from "@/components/seasons/SeasonSwitcher";
 import { LeagueTable } from "@/components/standings/LeagueTable";
+import { TableImageButton } from "@/components/graphics/ImageButtons";
+import { tableImageData } from "@/lib/data/graphics";
+import { todayInLeagueTimezone } from "@/utils/dates";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { getSeasonsWithFixtures, pickSeason } from "@/lib/data/season-picker";
@@ -37,7 +40,16 @@ export default async function StandingsPage({ searchParams }: { searchParams: { 
 
   return (
     <>
-      <PageHeader title="Standings" description={season.name} actions={<SeasonStatusBadge status={season.status} />} />
+      <PageHeader
+        title="Standings"
+        description={season.name}
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            <SeasonStatusBadge status={season.status} />
+            <TableImageButton data={tableImageData(season.name, table, todayInLeagueTimezone())} />
+          </div>
+        }
+      />
       <SeasonSwitcher seasons={seasons} currentId={season.id} basePath="/standings" />
 
       <div className="mb-4">

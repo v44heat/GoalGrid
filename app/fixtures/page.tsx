@@ -89,7 +89,7 @@ export default async function FixturesPage({
         </nav>
       )}
 
-      <FixtureList rows={rows} today={today} nextMatchday={next} />
+      <FixtureList rows={rows} today={today} nextMatchday={next} seasonName={season.name} />
     </>
   );
 }

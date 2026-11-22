@@ -11,6 +11,11 @@ export function isValidIsoDate(value: string): boolean {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
 
+/** Today as YYYY-MM-DD in the league's timezone (the server itself runs in UTC). */
+export function todayInLeagueTimezone(timeZone = "Africa/Nairobi"): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
+}
+
 /** 01 Dec 2026 */
 export function formatDate(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {
