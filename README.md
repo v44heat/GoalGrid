@@ -23,6 +23,28 @@ In Supabase > SQL Editor run, in order:
 4. `supabase/migrations/0003_seasons_teams.sql` (creates the `team-logos` storage bucket and the season-creation function)
 5. `supabase/migrations/0004_fixtures.sql` (fixture generation function and participant lock)
 6. `supabase/migrations/0005_results.sql` (record and delete result functions)
+7. `supabase/migrations/0006_hardening.sql` (privacy for unapproved accounts, season status rules, protection for finished seasons)
+
+## Season lifecycle, Hall of Fame and the dashboard (Phase 7)
+
+- A season moves DRAFT, ACTIVE, COMPLETED, ARCHIVED. The admin buttons live on the season's admin page.
+  The database enforces the order (and a completed season can be reopened if it was completed by mistake).
+  Completing locks results and teams. Finished seasons can never be deleted.
+- `/hall-of-fame` lists every completed season's champion, a titles table and all-time player records.
+  A tie for first place awards no title: the season is shown as "shared first place".
+- The home page is a live dashboard: current leader, standings, latest results, upcoming fixtures and
+  top performers. Before any season has fixtures it shows the welcome page instead.
+- Registration is paused automatically if 30 accounts are waiting for approval (a spam guard).
+
+## Before you deploy
+
+```bash
+npm run predeploy      # verify + audit + typecheck + lint + build
+```
+
+`npm run audit` checks the security rules the project relies on (admin checks in every server action, the
+service-role key kept on the server, row level security on every table, no secrets in the folder).
+See `docs/DEPLOYMENT.md` for the full Supabase and Vercel steps.
 
 ## Results and standings (Phase 5)
 
@@ -45,9 +67,8 @@ In Supabase > SQL Editor run, in order:
   match card (on `/results` and in `/admin/results`), league table (`/standings`), fixture graphic for a matchday
   (`/fixtures`) and a season summary card (on a completed season's page). On phones a Share button sends the
   image straight to WhatsApp.
-- The season summary appears once a season's status is COMPLETED. Phase 7 adds the Complete button. To try it
-  sooner: `update seasons set status = 'COMPLETED' where name = 'Your season';` (set it back to ACTIVE afterwards).
-- `npm run verify` runs the fixture, standings and statistics checks together.
+- The season summary appears once a season is completed (use "Complete season" on the season's admin page).
+- `npm run verify` runs the fixture, standings, statistics and Hall of Fame checks together.
 
 ## Fixtures (Phase 4)
 

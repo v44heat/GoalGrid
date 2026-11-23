@@ -16,6 +16,17 @@ export function todayInLeagueTimezone(timeZone = "Africa/Nairobi"): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
 }
 
+/** "Today", "Tomorrow", "Yesterday", otherwise "07 Dec 2026". Both arguments are YYYY-MM-DD. */
+export function relativeDayLabel(iso: string, todayIso: string): string {
+  const days = Math.round(
+    (new Date(`${iso}T00:00:00Z`).getTime() - new Date(`${todayIso}T00:00:00Z`).getTime()) / 86_400_000
+  );
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days === -1) return "Yesterday";
+  return formatDate(iso);
+}
+
 /** 01 Dec 2026 */
 export function formatDate(iso: string): string {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {

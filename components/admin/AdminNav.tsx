@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/utils/cn";
 
-// Sections are added here as later phases build them.
+// Participants are managed per season, from the season's own page.
 const ITEMS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/players", label: "Players" },
@@ -12,6 +12,7 @@ const ITEMS = [
   { href: "/admin/fixtures", label: "Fixtures" },
   { href: "/admin/results", label: "Results" },
   { href: "/admin/teams", label: "Teams" },
+  { href: "/statistics", label: "Statistics" },
 ];
 
 export function AdminNav() {
