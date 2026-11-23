@@ -1,6 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: Parameters<NextResponse["cookies"]["set"]>[2];
+};
+
 /** Refreshes the Supabase session cookie on every request and returns the verified user. */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -13,10 +19,12 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(list) {
-          list.forEach(({ name, value }) => request.cookies.set(name, value));
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
           response = NextResponse.next({ request });
-          list.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
         },
@@ -24,7 +32,6 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // getUser() validates the token with Supabase; getSession() would only trust the cookie.
   const {
     data: { user },
   } = await supabase.auth.getUser();
