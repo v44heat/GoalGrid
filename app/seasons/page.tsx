@@ -3,6 +3,7 @@ import { Trophy } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { SeasonStatusBadge } from "@/components/seasons/SeasonStatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/utils/dates";
@@ -27,7 +28,18 @@ export default async function SeasonsPage() {
 
   return (
     <>
-      <PageHeader title="Seasons" description="Every month-long league, past and present." />
+      <PageHeader
+        title="Seasons"
+        description="Every month-long league, past and present."
+        actions={
+          <Link href="/hall-of-fame">
+            <Button variant="secondary">
+              <Trophy className="h-4 w-4" aria-hidden />
+              Hall of Fame
+            </Button>
+          </Link>
+        }
+      />
 
       {seasons.length === 0 ? (
         <EmptyState

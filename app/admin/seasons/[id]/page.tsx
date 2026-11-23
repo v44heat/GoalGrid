@@ -5,6 +5,7 @@ import { SeasonStatusBadge } from "@/components/seasons/SeasonStatusBadge";
 import { ParticipantManager } from "@/components/admin/ParticipantManager";
 import { FixturePreview } from "@/components/admin/FixturePreview";
 import { SeasonControls } from "@/components/admin/SeasonControls";
+import { SeasonLifecycle } from "@/components/admin/SeasonLifecycle";
 import { createClient } from "@/lib/supabase/server";
 import { getParticipants, getSeason, getTeams } from "@/lib/data/seasons";
 import { getFixtureCount } from "@/lib/data/fixtures";
@@ -54,6 +55,13 @@ export default async function AdminSeasonPage({
   }));
   const { matches, matchdays } = summarise(generated);
   const playersWithoutTeam = participants.filter((p) => !p.team_id).map((p) => p.username);
+
+  // Matches that would be left without a result if the season were completed now.
+  const { count: unplayedCount } = await supabase
+    .from("fixtures")
+    .select("*", { count: "exact", head: true })
+    .eq("season_id", season.id)
+    .in("status", ["UPCOMING", "POSTPONED"]);
 
   return (
     <>
@@ -135,6 +143,18 @@ export default async function AdminSeasonPage({
             playersWithoutTeam={playersWithoutTeam}
           />
         </div>
+      )}
+
+      {!isDraft && (
+        <>
+          <h2 className="mb-3 mt-12 font-display text-2xl font-semibold">Season status</h2>
+          <SeasonLifecycle
+            seasonId={season.id}
+            seasonName={season.name}
+            status={season.status}
+            unplayed={unplayedCount ?? 0}
+          />
+        </>
       )}
     </>
   );

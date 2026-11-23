@@ -43,8 +43,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
         <ToastProvider>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-grass focus:px-4 focus:py-2 focus:font-semibold focus:text-turf-950"
+          >
+            Skip to content
+          </a>
           <Navbar user={user} />
-          <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
+          <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-10 outline-none">
+            {children}
+          </main>
           <Footer />
         </ToastProvider>
       </body>

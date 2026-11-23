@@ -11,7 +11,13 @@
     "verify:fixtures": "node --experimental-strip-types --no-warnings scripts/verify-fixtures.mjs",
     "verify:standings": "node --experimental-strip-types --no-warnings scripts/verify-standings.mjs",
     "verify:statistics": "node --experimental-strip-types --no-warnings scripts/verify-statistics.mjs",
-    "verify": "npm run verify:fixtures && npm run verify:standings && npm run verify:statistics"
+    "verify:hall": "node --experimental-strip-types --no-warnings scripts/verify-hall-of-fame.mjs",
+    "verify": "npm run verify:fixtures && npm run verify:standings && npm run verify:statistics && npm run verify:hall",
+    "audit": "node scripts/audit.mjs",
+    "predeploy": "npm run verify && npm run audit && npm run typecheck && npm run lint && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

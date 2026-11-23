@@ -13,6 +13,8 @@ import type { ActionState } from "@/types/actions";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 
+const MAX_PENDING_REGISTRATIONS = 30;
+
 export async function registerAction(
   _prev: ActionState,
   formData: FormData
@@ -37,6 +39,19 @@ export async function registerAction(
 
   try {
     const admin = createAdminClient();
+
+    // Anyone can reach this form, so cap the approval queue. A private league never needs
+    // dozens of waiting accounts; if the cap is hit it is almost certainly spam.
+    const { count: waiting } = await admin
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "PENDING");
+    if ((waiting ?? 0) >= MAX_PENDING_REGISTRATIONS) {
+      return {
+        ok: false,
+        error: "Registrations are paused because too many accounts are waiting. Ask the league admin.",
+      };
+    }
 
     const { data: existing } = await admin
       .from("users")
