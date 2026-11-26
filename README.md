@@ -1,4 +1,3 @@
-# eFootball League Manager
 
 Private double round-robin eFootball league for friends.
 Next.js (App Router) + TypeScript + Tailwind + Supabase. Deployed on Vercel.
