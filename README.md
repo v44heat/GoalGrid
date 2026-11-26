@@ -24,6 +24,25 @@ In Supabase > SQL Editor run, in order:
 5. `supabase/migrations/0004_fixtures.sql` (fixture generation function and participant lock)
 6. `supabase/migrations/0005_results.sql` (record and delete result functions)
 7. `supabase/migrations/0006_hardening.sql` (privacy for unapproved accounts, season status rules, protection for finished seasons)
+8. `supabase/migrations/0007_phase8.sql` (audit log, score proposals, profile pictures)
+
+**Updating an existing deployment:** run the new migration in Supabase FIRST, then deploy the new code. The new code
+reads columns and tables that the migration creates, so the other order makes pages fail until it is run.
+
+## Install on a phone, audit log, score approvals, profiles (Phase 8)
+
+- **Install as an app:** on Android Chrome use the "Install the app" button in the footer. On iPhone open the site in
+  Safari, tap Share, then Add to Home Screen. Offline, the app shows a friendly screen. It never stores league data,
+  so what you see is always live.
+- **Audit log** (`/admin/audit`): every admin action with who and when. Result changes record the old and new score.
+  Entries cannot be edited or deleted through the app; only the database function that stamps the real admin can add them.
+- **Score approvals:** players report the score of their own matches on `/account`. The admin reviews them on
+  `/admin/approvals`, approves as is or corrects the numbers, or rejects with a reason. The admin can still enter or
+  change any result directly under Results; that replaces any score a player was waiting on.
+- **My account** (`/account`): profile picture, change password (asks for the current one, then signs out other
+  devices), score reporting and submission history.
+- **Profile pictures:** any photo is cropped and shrunk to a small square JPEG in the browser before upload.
+  Admins can remove a picture from the Players page.
 
 ## Season lifecycle, Hall of Fame and the dashboard (Phase 7)
 

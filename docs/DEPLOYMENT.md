@@ -14,6 +14,7 @@ Everything here runs on free tiers for a small private league.
    5. `supabase/migrations/0004_fixtures.sql`
    6. `supabase/migrations/0005_results.sql`
    7. `supabase/migrations/0006_hardening.sql`
+   8. `supabase/migrations/0007_phase8.sql`
 
    Each should finish with "Success". If one errors, stop and fix it before running the next.
 3. **Authentication > Sign In / Providers**: turn **off** "Allow new users to sign up". The app creates
@@ -68,6 +69,13 @@ production build. Fix anything it reports before deploying.
 - Download a match card, the table and a fixtures graphic; try Share on a phone.
 - Complete the season and check `/hall-of-fame`.
 - Check the main pages on a phone-sized screen.
+- Install it: on Android use the footer button, on iPhone Safari use Share then Add to Home Screen. Turn on airplane
+  mode and open the app: you should see the offline screen.
+- As a player, open `/account`, add a profile picture, and report a score for one of your matches.
+- As admin, open `/admin/approvals`: approve it (try changing the numbers once), then open `/admin/audit` and
+  confirm both the approval and the adjustment are listed.
+- Change a password on `/account`, then check that the other device was signed out.
+- Try to open `/account` while logged out: you should be sent to the login page.
 
 ## 6. Good to know
 

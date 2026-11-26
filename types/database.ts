@@ -8,6 +8,8 @@ export interface UserProfile {
   username: string;
   role: UserRole;
   status: UserStatus;
+  /** storage path of the profile picture, or null */
+  avatar_path: string | null;
   created_at: string;
   updated_at: string;
 }

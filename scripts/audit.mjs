@@ -122,16 +122,77 @@ const src = all.filter((p) => /\.(ts|tsx)$/.test(rel(p)) && !rel(p).startsWith("
     check(`table ${t}: row level security enabled`, new RegExp(`alter table ${t}\\s+enable row level security`, "i").test(sql));
     check(`table ${t}: has a select policy`, new RegExp(`create policy "[^"]+"\\s+on\\s+${t}\\s+for select`, "i").test(sql));
   }
-  check("found the 6 core tables", tables.length === 6, tables.join(", "));
+  check("found all 8 tables", tables.length === 8, tables.join(", "));
 
   const definers = [...sql.matchAll(/create or replace function (\w+)[\s\S]*?\$\$;?/gi)].map((m) => m[0]).filter((b) => /security definer/i.test(b));
   for (const b of definers) {
     const name = b.match(/function (\w+)/)[1];
     check(`security definer function ${name} pins search_path`, /set search_path/i.test(b));
   }
-  check("players have no write policy on league data", !/create policy "[^"]*player[^"]*"\s+on\s+\w+\s+for\s+(insert|update|delete|all)/i.test(sql));
+  // Every policy, parsed. League data may only be written by admins; the audit log by nobody directly.
+  const policies = [...sql.matchAll(/create policy\s+"([^"]+)"\s+on\s+([\w.]+)\s+(?:as\s+\w+\s+)?for\s+(\w+)([\s\S]*?);/gi)].map((m) => ({
+    name: m[1], table: m[2], cmd: m[3].toLowerCase(), body: m[4],
+  }));
+  const LEAGUE = ["users", "teams", "seasons", "season_participants", "fixtures", "match_results"];
+  for (const pol of policies.filter((x) => LEAGUE.includes(x.table) && x.cmd !== "select")) {
+    check(`policy "${pol.name}" (${pol.cmd} on ${pol.table}) is admin-only`, /is_admin\(\)/.test(pol.body));
+  }
+  check("audit log has NO insert/update/delete policy (only the stamping function can write)",
+    !policies.some((x) => x.table === "admin_actions" && x.cmd !== "select"));
+  check("audit log is readable by admins only", policies.some((x) => x.table === "admin_actions" && x.cmd === "select" && /is_admin\(\)/.test(x.body)));
+  const ins = policies.find((x) => x.table === "result_proposals" && x.cmd === "insert" && !/is_admin/.test(x.body));
+  check("players can only propose scores as themselves", Boolean(ins && /submitted_by = auth\.uid\(\)/.test(ins.body)));
+  check("a proposal can only be proposed as PENDING", Boolean(ins && /status = 'PENDING'/.test(ins.body)));
+  const upd = policies.find((x) => x.table === "result_proposals" && x.cmd === "update" && !/is_admin/.test(x.body));
+  check("players can only withdraw (CANCELLED) their own pending proposals", Boolean(upd && /submitted_by = auth\.uid\(\)/.test(upd.body) && /status = 'CANCELLED'/.test(upd.body)));
+  for (const pol of policies.filter((x) => x.table === "storage.objects" && /bucket_id = 'avatars'/.test(x.body) && ["insert", "update"].includes(x.cmd))) {
+    check(`avatar policy "${pol.name}" limits writes to the user's own folder`, /auth\.uid\(\)::text/.test(pol.body));
+  }
+  check("profile pictures are stored as paths, never URLs (cannot point at another site)", /avatar_path_shape/.test(sql) && !/avatar_url/.test(sql));
+  check("avatar path function validates the folder", /INVALID_AVATAR_PATH/.test(sql));
+  check("result changes are written to the audit log inside the database", /function record_match_result[\s\S]*?log_admin_action[\s\S]*?function delete_match_result[\s\S]*?log_admin_action/i.test(sql));
+  check("approve/reject functions require an admin", /function approve_result_proposal[\s\S]*?NOT_ADMIN/i.test(sql) && /function reject_result_proposal[\s\S]*?NOT_ADMIN/i.test(sql));
   check("new accounts are forced to PLAYER / PENDING by the trigger", /values \(new\.id, new\.raw_user_meta_data ->> 'username', 'PLAYER', 'PENDING'\)/.test(sql));
   check("finished seasons are protected from deletion", /protect_finished_seasons/.test(sql));
+}
+
+// 7. Admin actions are logged; the service worker never caches data.
+{
+  for (const f of ["app/admin/players/actions.ts", "app/admin/teams/actions.ts", "app/admin/seasons/actions.ts",
+                   "app/admin/seasons/fixture-actions.ts", "app/admin/seasons/lifecycle-actions.ts", "app/admin/fixtures/actions.ts"]) {
+    check(`${f} writes to the audit log`, /await audit\(/.test(read(path.join(root, f))));
+  }
+  const sw = read(path.join(root, "public/sw.js"));
+  check("service worker never stores pages or data (only the offline page may be cached)", !/\.put\(|\.addAll\(|\.add\((?!new Request\(OFFLINE_URL)/.test(sw.replace(/\/\*[\s\S]*?\*\//g, "")));
+  check("service worker only handles page navigations", /request\.mode !== "navigate"\) return;/.test(sw));
+  check("offline page is static (does not show anyone's account)", !/username|<script src/i.test(read(path.join(root, "public/offline.html"))));
+}
+
+// 8. The lint rule that broke the first Vercel build: raw ' or " in page text (react/no-unescaped-entities).
+{
+  let ts = null;
+  try {
+    const { createRequire } = await import("node:module");
+    ts = createRequire(import.meta.url)("typescript");
+  } catch {
+    check("typescript is installed so JSX text can be checked", false, "run npm install first");
+  }
+  if (ts) {
+    const bad = [];
+    for (const f of src.filter((p) => p.endsWith(".tsx"))) {
+      const text = read(f);
+      const sf = ts.createSourceFile(f, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+      const visit = (n) => {
+        if (n.kind === ts.SyntaxKind.JsxText && /['">}]/.test(n.getText(sf))) {
+          const { line } = sf.getLineAndCharacterOfPosition(n.getStart(sf));
+          bad.push(`${rel(f)}:${line + 1}`);
+        }
+        ts.forEachChild(n, visit);
+      };
+      visit(sf);
+    }
+    check("no raw apostrophes or quotes in JSX text (would fail next lint)", bad.length === 0, bad.join(", "));
+  }
 }
 
 // ---- report ----

@@ -5,6 +5,7 @@ import type { FixtureRow } from "@/types/fixtures";
 
 export interface TableRow extends StandingRow {
   username: string;
+  avatarPath: string | null;
   team: Team | null;
 }
 
@@ -22,10 +23,10 @@ export interface SeasonTable {
  * reflected immediately.
  */
 export function buildSeasonTable(fixtures: FixtureRow[]): SeasonTable {
-  const players = new Map<string, { username: string; team: Team | null }>();
+  const players = new Map<string, { username: string; avatarPath: string | null; team: Team | null }>();
   fixtures.forEach((f) => {
-    players.set(f.home.userId, { username: f.home.username, team: f.home.team });
-    players.set(f.away.userId, { username: f.away.username, team: f.away.team });
+    players.set(f.home.userId, { username: f.home.username, avatarPath: f.home.avatarPath, team: f.home.team });
+    players.set(f.away.userId, { username: f.away.username, avatarPath: f.away.avatarPath, team: f.away.team });
   });
 
   const played = fixtures
@@ -53,6 +54,7 @@ export function buildSeasonTable(fixtures: FixtureRow[]): SeasonTable {
     rows: standings.map((s) => ({
       ...s,
       username: s.name,
+      avatarPath: players.get(s.playerId)?.avatarPath ?? null,
       team: players.get(s.playerId)?.team ?? null,
     })),
     played,

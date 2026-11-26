@@ -18,15 +18,16 @@ export async function getParticipants(supabase: Client, seasonId: string): Promi
   const { data } = await supabase
     .from("season_participants")
     .select(
-      "id, user_id, team_id, users(username), teams(id, name, short_name, logo_url, created_at)"
+      "id, user_id, team_id, users(username, avatar_path), teams(id, name, short_name, logo_url, created_at)"
     )
     .eq("season_id", seasonId);
 
+  type UserBits = { username: string; avatar_path: string | null };
   type Raw = {
     id: string;
     user_id: string;
     team_id: string | null;
-    users: { username: string } | { username: string }[] | null;
+    users: UserBits | UserBits[] | null;
     teams: Team | Team[] | null;
   };
   const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
@@ -37,6 +38,7 @@ export async function getParticipants(supabase: Client, seasonId: string): Promi
       user_id: r.user_id,
       team_id: r.team_id,
       username: one(r.users)?.username ?? "Unknown",
+      avatarPath: one(r.users)?.avatar_path ?? null,
       team: one(r.teams),
     }))
     .sort((a, b) => a.username.localeCompare(b.username));

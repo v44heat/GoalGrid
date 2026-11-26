@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ToastProvider } from "@/components/ui/Toast";
+import { RegisterServiceWorker } from "@/components/pwa/RegisterServiceWorker";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { APP_NAME } from "@/lib/constants";
 
@@ -23,6 +24,10 @@ export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
   description:
     "A private double round-robin eFootball league: fixtures, results, standings and shareable match cards.",
+  applicationName: "eFootball League",
+  // iPhones ignore parts of the web manifest, so they get their own hints.
+  appleWebApp: { capable: true, title: "eFootball", statusBarStyle: "black-translucent" },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {
@@ -36,13 +41,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Suspended or pending accounts are treated as signed out in the UI.
   const user =
     profile && profile.status === "APPROVED"
-      ? { username: profile.username, role: profile.role }
+      ? { username: profile.username, role: profile.role, avatarPath: profile.avatar_path }
       : null;
 
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
         <ToastProvider>
+          <RegisterServiceWorker />
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-grass focus:px-4 focus:py-2 focus:font-semibold focus:text-turf-950"

@@ -7,31 +7,42 @@ import { cn } from "@/utils/cn";
 // Participants are managed per season, from the season's own page.
 const ITEMS = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/approvals", label: "Approvals" },
   { href: "/admin/players", label: "Players" },
   { href: "/admin/seasons", label: "Seasons" },
   { href: "/admin/fixtures", label: "Fixtures" },
   { href: "/admin/results", label: "Results" },
   { href: "/admin/teams", label: "Teams" },
+  { href: "/admin/audit", label: "Audit log" },
   { href: "/statistics", label: "Statistics" },
 ];
 
-export function AdminNav() {
+export function AdminNav({ waitingScores = 0 }: { waitingScores?: number }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Admin" className="mb-8 flex gap-1 overflow-x-auto border-b border-turf-700 pb-3">
       {ITEMS.map((item) => {
         const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+        const showBadge = item.href === "/admin/approvals" && waitingScores > 0;
         return (
           <Link
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "whitespace-nowrap rounded-md px-4 py-2 text-sm",
+              "inline-flex items-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm",
               active ? "bg-turf-700 text-grass" : "text-chalk-dim hover:text-chalk"
             )}
           >
             {item.label}
+            {showBadge && (
+              <span
+                className="tabular rounded-full bg-gold px-2 py-0.5 text-xs font-semibold text-turf-950"
+                aria-label={`${waitingScores} waiting`}
+              >
+                {waitingScores}
+              </span>
+            )}
           </Link>
         );
       })}

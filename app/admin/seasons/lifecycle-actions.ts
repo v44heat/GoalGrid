@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getApprovedAdmin } from "@/lib/auth/session";
+import { audit } from "@/lib/audit/log";
 import { getSeason } from "@/lib/data/seasons";
 import { UUID_RE } from "@/lib/validation/auth";
 import type { ActionState } from "@/types/actions";
@@ -64,6 +65,13 @@ async function move(
   if (!data) return { ok: false, error: wrongState };
 
   refresh(seasonId);
+  await audit({
+    action: `season.${to.toLowerCase()}`,
+    entity: "season",
+    entityId: seasonId,
+    summary: done(season.name),
+    details: { from, to },
+  });
   return { ok: true, message: done(season.name) };
 }
 

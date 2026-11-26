@@ -3,6 +3,7 @@ import type { FixtureStatus, Team } from "@/types/database";
 export interface FixturePlayer {
   userId: string;
   username: string;
+  avatarPath: string | null;
   team: Team | null;
 }
 
