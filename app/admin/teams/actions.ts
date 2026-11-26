@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getApprovedAdmin } from "@/lib/auth/session";
+import { audit } from "@/lib/audit/log";
 import { UUID_RE } from "@/lib/validation/auth";
 import {
   LOGO_TYPES,
@@ -71,6 +72,7 @@ export async function createTeamAction(formData: FormData): Promise<ActionState>
   }
 
   revalidatePath("/admin/teams");
+  await audit({ action: "team.create", entity: "team", summary: `Added team ${name}`, details: { name, short_name: shortName } });
   return { ok: true, message: `${name} added.` };
 }
 
@@ -122,6 +124,7 @@ export async function updateTeamAction(formData: FormData): Promise<ActionState>
 
   revalidatePath("/admin/teams");
   revalidatePath("/seasons", "layout");
+  await audit({ action: "team.update", entity: "team", entityId: id, summary: `Edited team ${name}`, details: { name, short_name: shortName, logo_changed: Boolean(file) || removeLogo } });
   return { ok: true, message: `${name} saved.` };
 }
 
@@ -130,6 +133,7 @@ export async function deleteTeamAction(teamId: string): Promise<ActionState> {
   if (!UUID_RE.test(teamId)) return { ok: false, error: "Invalid request." };
 
   const supabase = createClient();
+  const { data: existing } = await supabase.from("teams").select("name").eq("id", teamId).maybeSingle();
   const { error } = await supabase.from("teams").delete().eq("id", teamId);
   if (error) {
     if (error.code === "23503") {
@@ -140,5 +144,6 @@ export async function deleteTeamAction(teamId: string): Promise<ActionState> {
   }
 
   revalidatePath("/admin/teams");
+  await audit({ action: "team.delete", entity: "team", entityId: teamId, summary: `Removed team ${existing?.name ?? "(unknown)"}` });
   return { ok: true, message: "Team removed." };
 }

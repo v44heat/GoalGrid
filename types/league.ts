@@ -5,6 +5,7 @@ export interface ParticipantRow {
   user_id: string;
   team_id: string | null;
   username: string;
+  avatarPath: string | null;
   team: Team | null;
 }
 

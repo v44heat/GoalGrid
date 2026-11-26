@@ -73,7 +73,7 @@ export default async function HeadToHeadPage({ searchParams }: { searchParams: {
           </Card>
 
           {view.record.played === 0 ? (
-            <p className="mt-6 text-chalk-dim">These two haven't played each other yet.</p>
+            <p className="mt-6 text-chalk-dim">These two haven&apos;t played each other yet.</p>
           ) : (
             <>
               <div

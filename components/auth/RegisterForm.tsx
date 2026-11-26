@@ -16,7 +16,7 @@ export function RegisterForm() {
     return (
       <div className="text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-grass" aria-hidden />
-        <h2 className="mt-4 font-display text-3xl font-semibold">You're registered</h2>
+        <h2 className="mt-4 font-display text-3xl font-semibold">You&apos;re registered</h2>
         <p className="mt-2 text-chalk-dim">{state.message}</p>
         <Link href="/login" className="mt-6 inline-block">
           <Button variant="secondary">Go to log in</Button>

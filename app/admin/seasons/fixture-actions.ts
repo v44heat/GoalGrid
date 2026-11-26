@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getApprovedAdmin } from "@/lib/auth/session";
+import { audit } from "@/lib/audit/log";
 import { getParticipants, getSeason } from "@/lib/data/seasons";
 import { getFixtureCount } from "@/lib/data/fixtures";
 import { generateFixtures, MAX_PLAYERS, MIN_PLAYERS } from "@/lib/fixtures/generate";
@@ -71,6 +72,7 @@ export async function generateFixturesAction(seasonId: string): Promise<ActionSt
   }
 
   refresh(seasonId);
+  await audit({ action: "fixtures.generate", entity: "fixture", seasonId, summary: `Generated ${data as number} fixtures`, details: { count: data as number } });
   return { ok: true, message: `${data as number} fixtures generated.` };
 }
 
@@ -93,6 +95,7 @@ export async function discardFixturesAction(seasonId: string): Promise<ActionSta
   }
 
   refresh(seasonId);
+  await audit({ action: "fixtures.discard", entity: "fixture", seasonId, summary: "Discarded all fixtures" });
   return { ok: true, message: "Fixtures discarded." };
 }
 
@@ -137,5 +140,12 @@ export async function startSeasonAction(seasonId: string): Promise<ActionState> 
 
   refresh(seasonId);
   revalidatePath("/");
+  await audit({
+    action: "season.active",
+    entity: "season",
+    entityId: seasonId,
+    summary: `${season.name} has started`,
+    details: { from: "DRAFT", to: "ACTIVE" },
+  });
   return { ok: true, message: `${season.name} has started.` };
 }

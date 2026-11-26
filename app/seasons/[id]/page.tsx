@@ -148,14 +148,14 @@ export default async function SeasonPage({ params }: { params: { id: string } })
 
         {!me ? (
           <Card>
-            <p className="text-chalk-dim">Log in to pick a team if you're playing in this season.</p>
+            <p className="text-chalk-dim">Log in to pick a team if you&apos;re playing in this season.</p>
             <Link href={`/login?next=/seasons/${season.id}`} className="mt-4 inline-block">
               <Button variant="secondary">Log in</Button>
             </Link>
           </Card>
         ) : !mine ? (
           <Card>
-            <p className="text-chalk-dim">You're not playing in this season.</p>
+            <p className="text-chalk-dim">You&apos;re not playing in this season.</p>
           </Card>
         ) : !selectionOpen ? (
           <Card>

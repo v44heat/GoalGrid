@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getApprovedAdmin } from "@/lib/auth/session";
+import { audit } from "@/lib/audit/log";
 import { UUID_RE } from "@/lib/validation/auth";
 import { validateSeasonName } from "@/lib/validation/league";
 import { isValidIsoDate } from "@/utils/dates";
@@ -51,6 +52,13 @@ export async function createSeasonAction(
 
   revalidatePath("/seasons");
   revalidatePath("/admin/seasons");
+  await audit({
+    action: "season.create",
+    entity: "season",
+    entityId: data as string,
+    summary: `Created season ${name}`,
+    details: { start_date: startDate, participants: userIds.length },
+  });
   redirect(`/admin/seasons/${data as string}?created=1`);
 }
 
@@ -76,7 +84,7 @@ export async function addParticipantAction(
     return { ok: false, error: "Players can only be added while the season is a draft." };
   }
 
-  const { data: user } = await supabase.from("users").select("status").eq("id", userId).maybeSingle();
+  const { data: user } = await supabase.from("users").select("status, username").eq("id", userId).maybeSingle();
   if (!user || user.status !== "APPROVED") {
     return { ok: false, error: "Only approved players can join a season." };
   }
@@ -95,6 +103,7 @@ export async function addParticipantAction(
 
   revalidatePath(`/admin/seasons/${seasonId}`);
   revalidatePath(`/seasons/${seasonId}`);
+  await audit({ action: "participant.add", entity: "participant", entityId: userId, seasonId, summary: `Added ${user.username} to the season` });
   return { ok: true, message: "Player added." };
 }
 
@@ -112,6 +121,7 @@ export async function removeParticipantAction(
     return { ok: false, error: "Players can only be removed while the season is a draft." };
   }
 
+  const { data: leaving } = await supabase.from("users").select("username").eq("id", userId).maybeSingle();
   const { error } = await supabase
     .from("season_participants")
     .delete()
@@ -127,6 +137,7 @@ export async function removeParticipantAction(
 
   revalidatePath(`/admin/seasons/${seasonId}`);
   revalidatePath(`/seasons/${seasonId}`);
+  await audit({ action: "participant.remove", entity: "participant", entityId: userId, seasonId, summary: `Removed ${leaving?.username ?? "a player"} from the season` });
   return { ok: true, message: "Player removed." };
 }
 
@@ -170,5 +181,18 @@ export async function assignTeamAction(
 
   revalidatePath(`/admin/seasons/${seasonId}`);
   revalidatePath(`/seasons/${seasonId}`);
+  const [{ data: who }, { data: team }] = await Promise.all([
+    supabase.from("users").select("username").eq("id", userId).maybeSingle(),
+    teamId ? supabase.from("teams").select("name").eq("id", teamId).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  await audit({
+    action: teamId ? "participant.team_assign" : "participant.team_reset",
+    entity: "participant",
+    entityId: userId,
+    seasonId,
+    summary: teamId
+      ? `Assigned ${team?.name ?? "a team"} to ${who?.username ?? "a player"}`
+      : `Reset the team of ${who?.username ?? "a player"}`,
+  });
   return { ok: true, message: teamId ? "Team assigned." : "Team reset." };
 }

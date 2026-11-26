@@ -65,7 +65,7 @@ export default async function FixturesPage({
 
       {season.status === "DRAFT" && (
         <p className="mb-6 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
-          This season hasn't started yet. Dates may still change.
+          This season hasn&apos;t started yet. Dates may still change.
         </p>
       )}
 

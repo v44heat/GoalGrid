@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getApprovedAdmin } from "@/lib/auth/session";
+import { audit } from "@/lib/audit/log";
 import { UUID_RE } from "@/lib/validation/auth";
 import { isValidIsoDate } from "@/utils/dates";
 import { ADMIN_FIXTURE_STATUSES } from "@/types/fixtures";
@@ -27,7 +28,7 @@ export async function updateFixtureAction(
   const supabase = createClient();
   const { data: fixture } = await supabase
     .from("fixtures")
-    .select("id, season_id, status")
+    .select("id, season_id, status, scheduled_date, matchday, home_player_id, away_player_id")
     .eq("id", fixtureId)
     .maybeSingle();
   if (!fixture) return { ok: false, error: "Fixture not found." };
@@ -62,5 +63,24 @@ export async function updateFixtureAction(
 
   revalidatePath("/admin/fixtures");
   revalidatePath("/fixtures");
+
+  const changes: string[] = [];
+  if (fixture.scheduled_date !== scheduledDate) changes.push(`date ${fixture.scheduled_date} to ${scheduledDate}`);
+  if (fixture.status !== status) changes.push(`status ${fixture.status.toLowerCase()} to ${status.toLowerCase()}`);
+  if (changes.length > 0) {
+    const { data: names } = await supabase
+      .from("users")
+      .select("id, username")
+      .in("id", [fixture.home_player_id, fixture.away_player_id]);
+    const name = (id: string) => names?.find((u) => u.id === id)?.username ?? "?";
+    await audit({
+      action: "fixture.update",
+      entity: "fixture",
+      entityId: fixtureId,
+      seasonId: fixture.season_id,
+      summary: `Matchday ${fixture.matchday} ${name(fixture.home_player_id)} vs ${name(fixture.away_player_id)}: ${changes.join(", ")}`,
+      details: { old_date: fixture.scheduled_date, new_date: scheduledDate, old_status: fixture.status, new_status: status },
+    });
+  }
   return { ok: true, message: "Fixture updated." };
 }

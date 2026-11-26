@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SeasonSwitcher } from "@/components/seasons/SeasonSwitcher";
 import { TeamLogo } from "@/components/teams/TeamLogo";
+import { Avatar } from "@/components/ui/Avatar";
 import { FormChips } from "@/components/standings/FormChips";
 import { createClient } from "@/lib/supabase/server";
 import { getSeasonsWithFixtures, pickSeason } from "@/lib/data/season-picker";
@@ -55,7 +56,10 @@ export default async function PlayersPage({ searchParams }: { searchParams: { se
                     <span aria-hidden className="h-12 w-12 rounded-full border border-dashed border-turf-600" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-2xl font-semibold leading-tight">{r.username}</p>
+                    <p className="flex min-w-0 items-center gap-2 font-display text-2xl font-semibold leading-tight">
+                      <Avatar name={r.username} path={r.avatarPath} size={24} />
+                      <span className="truncate">{r.username}</span>
+                    </p>
                     <p className="truncate text-sm text-chalk-dim">{r.team?.name ?? "No team"}</p>
                   </div>
                   <div className="text-right">

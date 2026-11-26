@@ -5,17 +5,19 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
-import { changePlayerStatus } from "@/app/admin/players/actions";
+import { changePlayerStatus, removePlayerAvatarAction } from "@/app/admin/players/actions";
 import type { UserStatus } from "@/types/database";
 
 export function PlayerActions({
   userId,
   username,
   status,
+  hasAvatar = false,
 }: {
   userId: string;
   username: string;
   status: UserStatus;
+  hasAvatar?: boolean;
 }) {
   const toast = useToast();
   const router = useRouter();
@@ -35,8 +37,21 @@ export function PlayerActions({
     });
   }
 
+  function removePicture() {
+    startTransition(async () => {
+      const result = await removePlayerAvatarAction(userId);
+      toast(result.ok ? "success" : "error", (result.ok ? result.message : result.error) ?? "Done.");
+      router.refresh();
+    });
+  }
+
   return (
     <>
+      {hasAvatar && (
+        <Button size="sm" variant="ghost" disabled={pending} onClick={removePicture}>
+          Remove photo
+        </Button>
+      )}
       {status === "PENDING" && (
         <Button size="sm" loading={pending} onClick={() => run("approve")}>
           Approve

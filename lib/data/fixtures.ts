@@ -28,9 +28,9 @@ export async function getFixtureRows(supabase: Client, seasonId: string): Promis
   ]);
 
   const players = new Map<string, FixturePlayer>(
-    participants.map((p) => [p.user_id, { userId: p.user_id, username: p.username, team: p.team }])
+    participants.map((p) => [p.user_id, { userId: p.user_id, username: p.username, avatarPath: p.avatarPath, team: p.team }])
   );
-  const unknown = (id: string): FixturePlayer => ({ userId: id, username: "Unknown", team: null });
+  const unknown = (id: string): FixturePlayer => ({ userId: id, username: "Unknown", avatarPath: null, team: null });
 
   type Raw = {
     id: string;

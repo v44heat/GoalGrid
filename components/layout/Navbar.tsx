@@ -6,12 +6,14 @@ import { useState } from "react";
 import { Menu, X, Shield, LogOut } from "lucide-react";
 import { MAIN_NAV, APP_NAME } from "@/lib/constants";
 import { logoutAction } from "@/app/actions/auth";
+import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/utils/cn";
 import type { UserRole } from "@/types/database";
 
 export interface NavUser {
   username: string;
   role: UserRole;
+  avatarPath: string | null;
 }
 
 export function Navbar({ user }: { user: NavUser | null }) {
@@ -53,7 +55,14 @@ export function Navbar({ user }: { user: NavUser | null }) {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <span className="hidden text-sm text-chalk-dim sm:inline">{user.username}</span>
+              <Link
+                href="/account"
+                aria-label="My account"
+                className="hidden items-center gap-2 rounded-lg px-2 py-1 text-sm text-chalk-dim hover:text-chalk sm:inline-flex"
+              >
+                <Avatar name={user.username} path={user.avatarPath} size={28} />
+                {user.username}
+              </Link>
               {user.role === "ADMIN" && (
                 <Link
                   href="/admin"
@@ -125,6 +134,16 @@ export function Navbar({ user }: { user: NavUser | null }) {
             ))}
             {user ? (
               <>
+                <li>
+                  <Link
+                    href="/account"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-3 text-base text-chalk-dim"
+                  >
+                    <Avatar name={user.username} path={user.avatarPath} size={24} />
+                    My account
+                  </Link>
+                </li>
                 {user.role === "ADMIN" && (
                   <li>
                     <Link

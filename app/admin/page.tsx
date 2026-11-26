@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { SeasonStatusBadge } from "@/components/seasons/SeasonStatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getFixtureRows } from "@/lib/data/fixtures";
+import { countPendingProposals } from "@/lib/data/proposals";
 import { buildSeasonTable } from "@/lib/data/standings";
 import { formatDate } from "@/utils/dates";
 import type { Season } from "@/types/database";
@@ -33,6 +34,8 @@ export default async function AdminDashboardPage() {
       .select("id, name, start_date, end_date, status, created_at")
       .order("start_date", { ascending: false }),
   ]);
+
+  const waitingScores = await countPendingProposals(supabase);
 
   const seasons = (seasonRows ?? []) as Season[];
   // The season you are most likely working on: the active one, else the newest draft, else the newest.
@@ -108,6 +111,13 @@ export default async function AdminDashboardPage() {
         <p className="mt-4">
           <Link href="/admin/players" className="text-grass underline-offset-2 hover:underline">
             Review {pending} pending {pending === 1 ? "registration" : "registrations"}
+          </Link>
+        </p>
+      )}
+      {waitingScores > 0 && (
+        <p className="mt-2">
+          <Link href="/admin/approvals" className="text-gold underline-offset-2 hover:underline">
+            {waitingScores} {waitingScores === 1 ? "score is" : "scores are"} waiting for your approval
           </Link>
         </p>
       )}

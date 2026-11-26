@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { SeasonSwitcher } from "@/components/seasons/SeasonSwitcher";
 import { TeamLogo } from "@/components/teams/TeamLogo";
+import { Avatar } from "@/components/ui/Avatar";
 import { FormChips } from "@/components/standings/FormChips";
 import { createClient } from "@/lib/supabase/server";
 import { getSeasonsWithFixtures, pickSeason } from "@/lib/data/season-picker";
@@ -72,6 +73,7 @@ export default async function PlayerProfilePage({
       <SeasonSwitcher seasons={seasons} currentId={season.id} basePath={`/players/${me.playerId}`} />
 
       <Card className="mb-6 flex flex-wrap items-center gap-5">
+        <Avatar name={me.username} path={me.avatarPath} size={72} />
         {me.team ? (
           <TeamLogo name={me.team.name} shortName={me.team.short_name} logoUrl={me.team.logo_url} className="h-16 w-16" />
         ) : null}

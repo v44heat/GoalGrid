@@ -24,6 +24,14 @@ const nextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
         ],
       },
+      {
+        // The browser must always re-check the service worker file, or updates never arrive.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+          { key: "Content-Type", value: "text/javascript; charset=utf-8" },
+        ],
+      },
     ];
   },
 };
