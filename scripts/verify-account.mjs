@@ -1,6 +1,7 @@
 // Run with: npm run verify:account   (needs Node 22.6+)
 import { computeCrop, isJpeg, AVATAR_SIZE, AVATAR_MAX_BYTES } from "../lib/avatar/process.ts";
 import { validatePassword, validateUsername, validateEmail, safeNextPath } from "../lib/validation/auth.ts";
+import { isDeleteConfirmed } from "../lib/validation/account.ts";
 
 let failures = 0;
 const check = (cond, msg) => { if (!cond) { failures++; console.error("FAIL:", msg); } };
@@ -40,6 +41,13 @@ check(safeNextPath(undefined) === "/" && safeNextPath(42) === "/", "non-strings 
 // --- usernames / emails (unchanged rules, guarded because the account page relies on them) ---
 check(validateUsername("Vincy_9") === null && validateUsername("ab") !== null && validateUsername("a b") !== null, "username rules");
 check(validateEmail("a@b.co") === null && validateEmail("nope") !== null, "email rules");
+
+// --- account deletion needs a deliberate confirmation ---
+check(isDeleteConfirmed("DELETE"), "the exact word is accepted");
+check(isDeleteConfirmed("  DELETE  "), "surrounding spaces are tolerated");
+check(!isDeleteConfirmed("delete") && !isDeleteConfirmed("Delete"), "lower or mixed case is refused");
+check(!isDeleteConfirmed("DELETE ME") && !isDeleteConfirmed("DELETED") && !isDeleteConfirmed(""), "anything else is refused");
+check(!isDeleteConfirmed(null) && !isDeleteConfirmed(undefined) && !isDeleteConfirmed(42), "non-strings are refused");
 
 if (failures) { console.error(`${failures} check(s) failed`); process.exit(1); }
 console.log("All account checks passed.");

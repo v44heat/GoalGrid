@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { UUID_RE, validatePassword } from "@/lib/validation/auth";
 import { AVATAR_MAX_BYTES, isJpeg } from "@/lib/avatar/process";
+import { isDeleteConfirmed } from "@/lib/validation/account";
 import type { ActionState } from "@/types/actions";
 
 const LOGIN_FIRST: ActionState = { ok: false, error: "Log in to do that." };
@@ -199,4 +202,79 @@ export async function removeAvatarAction(): Promise<ActionState> {
 
   revalidatePath("/", "layout");
   return { ok: true, message: "Profile picture removed." };
+}
+
+/**
+ * Permanently delete the signed-in player's account.
+ *
+ * Order matters. Everything that can be checked is checked first (nothing has changed yet if one fails).
+ * Then the login account is deleted; a database trigger erases the personal data in the SAME transaction,
+ * so it either all happens or none of it does. See supabase/migrations/0008_account_deletion.sql.
+ */
+export async function deleteAccountAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.status !== "APPROVED") return LOGIN_FIRST;
+
+  const password = String(formData.get("password") ?? "");
+  const fieldErrors: Record<string, string> = {};
+  if (!isDeleteConfirmed(formData.get("confirm"))) fieldErrors.confirm = "Type DELETE in capital letters to confirm.";
+  if (!password) fieldErrors.password = "Enter your password.";
+  if (Object.keys(fieldErrors).length > 0) return { ok: false, fieldErrors };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return LOGIN_FIRST;
+
+  // Deleting is permanent, so prove it is really you (an unlocked phone is not enough).
+  const { error: reauthError } = await supabase.auth.signInWithPassword({ email: user.email, password });
+  if (reauthError) return { ok: false, fieldErrors: { password: "That password is not correct." } };
+
+  try {
+    const admin = createAdminClient();
+
+    // The league must always keep at least one working admin. (The database enforces this too.)
+    if (profile.role === "ADMIN") {
+      const { count } = await admin
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "ADMIN")
+        .eq("status", "APPROVED")
+        .is("deleted_at", null)
+        .neq("id", profile.id);
+      if ((count ?? 0) === 0) {
+        return {
+          ok: false,
+          error: "You are the only admin, so you cannot delete your account. Make another player an admin first.",
+        };
+      }
+    }
+
+    // Remove the picture files first: the personal data most worth erasing. Nothing else has changed yet.
+    await supabase.rpc("set_my_avatar", { p_path: null });
+    const { data: files } = await admin.storage.from(BUCKET).list(profile.id, { limit: 100 });
+    if (files && files.length > 0) {
+      await admin.storage.from(BUCKET).remove(files.map((f) => `${profile.id}/${f.name}`));
+    }
+
+    // The point of no return. The trigger erases the player in the same transaction.
+    const { error: deleteError } = await admin.auth.admin.deleteUser(profile.id);
+    if (deleteError) {
+      console.error("deleteAccount failed:", deleteError.message);
+      return { ok: false, error: "We could not delete your account, and nothing was changed. Try again." };
+    }
+  } catch (err) {
+    console.error("deleteAccount failed:", err);
+    return { ok: false, error: "We could not delete your account. Try again." };
+  }
+
+  // The session belongs to a user that no longer exists; clear the cookies and leave.
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // already gone
+  }
+  revalidatePath("/", "layout");
+  redirect("/?deleted=1");
 }

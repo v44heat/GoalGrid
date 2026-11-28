@@ -1,3 +1,4 @@
+# eFootball League Manager
 
 Private double round-robin eFootball league for friends.
 Next.js (App Router) + TypeScript + Tailwind + Supabase. Deployed on Vercel.
@@ -24,6 +25,7 @@ In Supabase > SQL Editor run, in order:
 6. `supabase/migrations/0005_results.sql` (record and delete result functions)
 7. `supabase/migrations/0006_hardening.sql` (privacy for unapproved accounts, season status rules, protection for finished seasons)
 8. `supabase/migrations/0007_phase8.sql` (audit log, score proposals, profile pictures)
+9. `supabase/migrations/0008_account_deletion.sql` (permanent account deletion)
 
 **Updating an existing deployment:** run the new migration in Supabase FIRST, then deploy the new code. The new code
 reads columns and tables that the migration creates, so the other order makes pages fail until it is run.
@@ -42,6 +44,23 @@ reads columns and tables that the migration creates, so the other order makes pa
   devices), score reporting and submission history.
 - **Profile pictures:** any photo is cropped and shrunk to a small square JPEG in the browser before upload.
   Admins can remove a picture from the Players page.
+
+## Deleting an account (Phase 9)
+
+Players can delete their own account from the bottom of `/account`. It asks for their password and for the word
+DELETE to be typed, then:
+
+- **Erased for good:** login, email, password, profile picture and username (the username becomes free again).
+- **Kept, anonymously:** matches they played stay in the league records, shown as "Deleted player xxxxxx", because
+  removing them would change everyone else's results, tables and past champions. Nothing links back to the person.
+- **Removed completely:** if they never played in a season, nothing about them remains.
+- Their name is also scrubbed from the admin audit log, and they leave any season that has not started.
+- Admins are told in the audit log (without a name). If a season is still running, the admin should cancel the
+  deleted player's remaining matches under Fixtures.
+- The last admin cannot delete their account.
+- Deleting a login account directly in the Supabase dashboard now does the same erasure automatically.
+- Limits: this removes the data the app holds. Supabase backups and hosting logs follow their own retention
+  rules. This is not legal advice.
 
 ## Season lifecycle, Hall of Fame and the dashboard (Phase 7)
 

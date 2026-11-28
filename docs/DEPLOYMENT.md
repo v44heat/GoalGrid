@@ -15,6 +15,7 @@ Everything here runs on free tiers for a small private league.
    6. `supabase/migrations/0005_results.sql`
    7. `supabase/migrations/0006_hardening.sql`
    8. `supabase/migrations/0007_phase8.sql`
+   9. `supabase/migrations/0008_account_deletion.sql`
 
    Each should finish with "Success". If one errors, stop and fix it before running the next.
 3. **Authentication > Sign In / Providers**: turn **off** "Allow new users to sign up". The app creates
@@ -76,6 +77,15 @@ production build. Fix anything it reports before deploying.
   confirm both the approval and the adjustment are listed.
 - Change a password on `/account`, then check that the other device was signed out.
 - Try to open `/account` while logged out: you should be sent to the login page.
+- **Account deletion (test with throwaway accounts, never a real player):**
+  1. Register `tester1`, approve it, and delete it from `/account` before it joins any season. In Supabase,
+     Authentication > Users should no longer list it, and the `users` table should have no row for it.
+  2. Register `tester2`, add it to a season, generate fixtures, record a result for one of its matches, then
+     delete it. Its matches should now show "Deleted player xxxxxx" on `/results` and `/standings`; the table totals
+     must be unchanged; the email must be gone from Authentication > Users; the old username should be free to
+     register again; `/admin/audit` should show an entry with no name in it; and the Players page should not list it.
+  3. Try to delete your only admin account: it must be refused with a clear message.
+  4. Enter a wrong password, then a wrong confirmation word: both must be refused and nothing deleted.
 
 ## 6. Good to know
 
