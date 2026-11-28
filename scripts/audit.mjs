@@ -76,7 +76,7 @@ const src = all.filter((p) => /\.(ts|tsx)$/.test(rel(p)) && !rel(p).startsWith("
   check("no NEXT_PUBLIC_ variable names a secret", nextPublic.length === 0, nextPublic.join(", "));
 
   const adminClientUsers = src.filter((p) => read(p).includes("createAdminClient")).map(rel);
-  const allowed = new Set(["lib/supabase/admin.ts", "app/actions/auth.ts", "app/seasons/actions.ts", "app/admin/players/page.tsx"]);
+  const allowed = new Set(["lib/supabase/admin.ts", "app/actions/auth.ts", "app/seasons/actions.ts", "app/admin/players/page.tsx", "app/account/actions.ts"]);
   const stray = adminClientUsers.filter((f) => !allowed.has(f));
   check("createAdminClient() is used only in the reviewed files", stray.length === 0, stray.join(", "));
 
@@ -152,6 +152,19 @@ const src = all.filter((p) => /\.(ts|tsx)$/.test(rel(p)) && !rel(p).startsWith("
   check("avatar path function validates the folder", /INVALID_AVATAR_PATH/.test(sql));
   check("result changes are written to the audit log inside the database", /function record_match_result[\s\S]*?log_admin_action[\s\S]*?function delete_match_result[\s\S]*?log_admin_action/i.test(sql));
   check("approve/reject functions require an admin", /function approve_result_proposal[\s\S]*?NOT_ADMIN/i.test(sql) && /function reject_result_proposal[\s\S]*?NOT_ADMIN/i.test(sql));
+
+  // Account deletion
+  check("erase_player cannot be run by players or the public (service role only)",
+    /revoke execute on function erase_player\(uuid\) from[^;]*\bauthenticated\b[^;]*;/i.test(sql) &&
+    /revoke execute on function erase_player\(uuid\) from[^;]*\banon\b/i.test(sql) &&
+    /grant\s+execute on function erase_player\(uuid\) to service_role/i.test(sql));
+  check("deleting a login account erases the player in the same transaction (trigger on auth.users)",
+    /create trigger on_auth_user_deleted\s+after delete on auth\.users/i.test(sql));
+  check("the link from users to auth.users is dropped by what it points at (not a guessed name)", /confrelid = 'auth\.users'::regclass/.test(sql));
+  check("the last admin can never be erased", /function erase_player[\s\S]*?LAST_ADMIN/i.test(sql));
+  check("audit log scrubbing never rewrites JSON as text", !/regexp_replace\(\s*details/i.test(sql));
+  check("only deleted players may have a non-standard username", /deleted_at is not null or username ~/.test(sql));
+  check("erased players are made unusable (suspended, role reset, picture cleared)", /set username = v_new_name,[\s\S]*?avatar_path = null,[\s\S]*?role = 'PLAYER',[\s\S]*?status = 'SUSPENDED'/i.test(sql));
   check("new accounts are forced to PLAYER / PENDING by the trigger", /values \(new\.id, new\.raw_user_meta_data ->> 'username', 'PLAYER', 'PENDING'\)/.test(sql));
   check("finished seasons are protected from deletion", /protect_finished_seasons/.test(sql));
 }
@@ -166,6 +179,19 @@ const src = all.filter((p) => /\.(ts|tsx)$/.test(rel(p)) && !rel(p).startsWith("
   check("service worker never stores pages or data (only the offline page may be cached)", !/\.put\(|\.addAll\(|\.add\((?!new Request\(OFFLINE_URL)/.test(sw.replace(/\/\*[\s\S]*?\*\//g, "")));
   check("service worker only handles page navigations", /request\.mode !== "navigate"\) return;/.test(sw));
   check("offline page is static (does not show anyone's account)", !/username|<script src/i.test(read(path.join(root, "public/offline.html"))));
+
+  // Account deletion flow
+  const acct = read(path.join(root, "app/account/actions.ts"));
+  const del = acct.slice(acct.indexOf("export async function deleteAccountAction"));
+  check("deleteAccountAction requires the typed confirmation", /isDeleteConfirmed\(/.test(del));
+  check("deleteAccountAction re-checks the password BEFORE deleting anything",
+    del.indexOf("signInWithPassword") !== -1 && del.indexOf("signInWithPassword") < del.indexOf("deleteUser("));
+  check("deleteAccountAction removes picture files before the point of no return",
+    del.indexOf("set_my_avatar") !== -1 && del.indexOf("set_my_avatar") < del.indexOf("deleteUser("));
+  check("deleteAccountAction protects the last admin", /role === "ADMIN"/.test(del) && /only admin/.test(del));
+  check("deleteAccountAction signs out and leaves the site afterwards", del.indexOf("signOut") > del.indexOf("deleteUser(") && /redirect\("\/\?deleted=1"\)/.test(del));
+  check("admin player list hides deleted accounts", /\.is\("deleted_at", null\)/.test(read(path.join(root, "app/admin/players/page.tsx"))));
+  check("admin cannot change a deleted account", /target\.deleted_at/.test(read(path.join(root, "app/admin/players/actions.ts"))));
 }
 
 // 8. The lint rule that broke the first Vercel build: raw ' or " in page text (react/no-unescaped-entities).

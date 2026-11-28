@@ -42,10 +42,10 @@ export async function changePlayerStatus(
 
   const { data: target } = await supabase
     .from("users")
-    .select("id, username, role, status")
+    .select("id, username, role, status, deleted_at")
     .eq("id", userId)
     .maybeSingle();
-  if (!target) return { ok: false, error: "Player not found." };
+  if (!target || target.deleted_at) return { ok: false, error: "Player not found." };
   if (target.role === "ADMIN") {
     return { ok: false, error: "Admin accounts can't be changed here." };
   }

@@ -6,6 +6,7 @@ import { AvatarUploader } from "@/components/account/AvatarUploader";
 import { ChangePasswordForm } from "@/components/account/ChangePasswordForm";
 import { SubmitScoreForm } from "@/components/account/SubmitScoreForm";
 import { CancelProposalButton } from "@/components/account/CancelProposalButton";
+import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/session";
 import { getFixtureRows } from "@/lib/data/fixtures";
@@ -63,6 +64,18 @@ export default async function AccountPage() {
     getMyRecentProposals(supabase, profile.id, 8),
   ]);
   const waitingFor = new Map(proposals.filter((p) => p.status === "PENDING").map((p) => [p.fixtureId, p]));
+
+  // Used only to explain, before deleting, what would be kept and what would be removed.
+  const { data: parts } = await supabase
+    .from("season_participants")
+    .select("season_id, seasons(status)")
+    .eq("user_id", profile.id);
+  type PartRow = { seasons: { status: string } | { status: string }[] | null };
+  const seasonStatuses = ((parts ?? []) as unknown as PartRow[]).map(
+    (r) => (Array.isArray(r.seasons) ? r.seasons[0] : r.seasons)?.status
+  );
+  const hasHistory = seasonStatuses.length > 0;
+  const inOngoingSeason = seasonStatuses.some((st) => st === "DRAFT" || st === "ACTIVE");
 
   return (
     <>
@@ -170,6 +183,8 @@ export default async function AccountPage() {
           <ChangePasswordForm />
         </Card>
       </section>
+
+      <DeleteAccountSection hasHistory={hasHistory} inOngoingSeason={inOngoingSeason} isAdmin={profile.role === "ADMIN"} />
     </>
   );
 }

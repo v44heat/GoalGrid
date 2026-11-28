@@ -81,11 +81,26 @@ function SectionHeading({ title, href, linkLabel }: { title: string; href: strin
   );
 }
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: { deleted?: string } }) {
+  // Shown once, right after someone deletes their account (the action sends them here).
+  const banner =
+    searchParams.deleted === "1" ? (
+      <p role="status" className="mb-6 rounded-lg border border-grass/40 bg-grass/10 px-4 py-3 text-sm">
+        Your account has been deleted. Your personal data has been erased.
+      </p>
+    ) : null;
+
   const supabase = createClient();
   const seasons = await getSeasonsWithFixtures(supabase);
   const season = pickSeason(seasons);
-  if (!season) return <Landing />;
+  if (!season) {
+    return (
+      <>
+        {banner}
+        <Landing />
+      </>
+    );
+  }
 
   const [fixtures, profile] = await Promise.all([getFixtureRows(supabase, season.id), getCurrentProfile()]);
   const table = buildSeasonTable(fixtures);
@@ -113,6 +128,7 @@ export default async function HomePage() {
 
   return (
     <>
+      {banner}
       <section className="relative overflow-hidden rounded-2xl border border-turf-700 bg-gradient-to-br from-turf-800 to-turf-900 px-6 py-8 sm:px-10">
         <PitchMarkings className="pointer-events-none absolute -right-10 top-1/2 hidden w-80 -translate-y-1/2 text-grass/10 md:block" />
         <div className="relative">

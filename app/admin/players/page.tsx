@@ -19,6 +19,7 @@ export default async function AdminPlayersPage() {
   const { data } = await supabase
     .from("users")
     .select("id, username, role, status, avatar_path, created_at, updated_at")
+    .is("deleted_at", null) // accounts people deleted are kept only as anonymous history, never listed here
     .order("created_at", { ascending: true });
   const users = ((data ?? []) as UserProfile[]).sort(
     (a, b) => ORDER[a.status] - ORDER[b.status]

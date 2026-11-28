@@ -21,7 +21,8 @@ export default async function AdminDashboardPage() {
     const { count } = await supabase
       .from("users")
       .select("*", { count: "exact", head: true })
-      .eq("status", status);
+      .eq("status", status)
+      .is("deleted_at", null);
     return count ?? 0;
   };
 
